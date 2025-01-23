@@ -1,3 +1,4 @@
+import re
 from abc import abstractmethod
 from gptcli.assistant import Assistant
 from gptcli.completion import (
@@ -28,6 +29,9 @@ class ChatListener:
         pass
 
     def on_chat_rerun(self, success: bool):
+        pass
+
+    def on_chat_back(self, x: int):
         pass
 
     def on_error(self, error: Exception):
@@ -63,12 +67,14 @@ COMMAND_CLEAR = (":clear", ":c")
 COMMAND_QUIT = (":quit", ":q")
 COMMAND_RERUN = (":rerun", ":r")
 COMMAND_HELP = (":help", ":h", ":?")
+COMMAND_BACK_REGEX = r":b(?:ack)? (\d{1,3})"
 ALL_COMMANDS = [*COMMAND_CLEAR, *COMMAND_QUIT, *COMMAND_RERUN, *COMMAND_HELP]
 COMMANDS_HELP = """
 Commands:
 - `:clear` / `:c` / Ctrl+C - Clear the conversation.
 - `:quit` / `:q` / Ctrl+D - Quit the program.
 - `:rerun` / `:r` / Ctrl+R - Re-run the last message.
+- `:back X` / `:b X` - Go back to message X. Does not re-run assistant's response.
 - `:help` / `:h` / `:?` - Show this help message.
 """
 
@@ -144,9 +150,20 @@ class ChatSession:
         self.listener.on_chat_message(user_message)
         self.user_prompts.append(user_message)
 
-    def _rollback_user_message(self):
-        self.messages = self.messages[:-1]
-        self.user_prompts = self.user_prompts[:-1]
+    def _back(self, x: int):
+        """
+        Go back to user-assistant message pair x in the conversation. Following messages will be discarded.
+        """
+        self._rollback_user_message(x)
+        self.listener.on_chat_back(x)
+
+    def _rollback_user_message(self, x: int = None):
+        if x is None:
+            self.messages = self.messages[:-1]
+            self.user_prompts = self.user_prompts[:-1]
+        else:
+            self.messages = self.messages[:2*x + 1]
+            self.user_prompts = self.user_prompts[:2*x + 1]
 
     def _print_help(self):
         with self.listener.response_streamer() as stream:
@@ -166,6 +183,10 @@ class ChatSession:
             return True
         elif user_input in COMMAND_HELP:
             self._print_help()
+            return True
+        elif re.match(COMMAND_BACK_REGEX, user_input):
+            match = re.match(COMMAND_BACK_REGEX, user_input)
+            self._back(int(match.group(1)))
             return True
 
         self._add_user_message(user_input)

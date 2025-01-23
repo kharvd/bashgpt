@@ -24,6 +24,7 @@ from gptcli.session import (
 TERMINAL_WELCOME = """
 Hi! I'm here to help. Type `:q` or Ctrl-D to exit, `:c` or Ctrl-C and Enter to clear
 the conversation, `:r` or Ctrl-R to re-generate the last response.
+Type `:b X` where X is a message pair number to go back to that message pair.
 To enter multi-line mode, enter a backslash `\\` followed by a new line.
 Exit the multi-line mode by pressing ESC and then Enter (Meta+Enter).
 Try `:?` for help.
@@ -100,6 +101,9 @@ class CLIChatListener(ChatListener):
             self.console.print("[bold]Re-running the last message.[/bold]")
         else:
             self.console.print("[bold]Nothing to re-run.[/bold]")
+
+    def on_chat_back(self, x: int):
+        self.console.print(f"[bold]Going back to message pair {x}.[/bold]")
 
     def on_error(self, e: Exception):
         if isinstance(e, BadRequestError):

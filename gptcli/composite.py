@@ -39,6 +39,10 @@ class CompositeChatListener(ChatListener):
         for listener in self.listeners:
             listener.on_chat_rerun(success)
 
+    def on_chat_back(self, x: int):
+        for listener in self.listeners:
+            listener.on_chat_back(x)
+
     def on_error(self, e: Exception):
         for listener in self.listeners:
             listener.on_error(e)

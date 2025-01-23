@@ -17,6 +17,9 @@ class LoggingChatListener(ChatListener):
         if success:
             self.logger.info("Re-generating the last message.")
 
+    def on_chat_back(self, x: int):
+        self.logger.info(f"Going back to message pair {x}.")
+
     def on_error(self, e: Exception):
         self.logger.exception(e)
 

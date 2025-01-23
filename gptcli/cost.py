@@ -30,6 +30,7 @@ class PriceChatListener(ChatListener):
         model = self.assistant._param("model")
         num_tokens = usage.total_tokens
         cost = usage.cost
+        message_idx = len(messages) // 2
 
         if cost is None:
             self.logger.error(f"Cannot get cost information for model {model}")
@@ -40,7 +41,7 @@ class PriceChatListener(ChatListener):
         self.logger.info(f"Message price (model: {model}): ${cost:.3f}")
         self.logger.info(f"Current spend: ${self.current_spend:.3f}")
         self.console.print(
-            f"Tokens: {num_tokens} | Price: ${cost:.3f} | Total: ${self.current_spend:.3f}",
+            f"Message pair #: {message_idx} | Tokens: {num_tokens} | Price: ${cost:.3f} | Total: ${self.current_spend:.3f}",
             justify="right",
             style="dim",
         )
